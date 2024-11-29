@@ -152,6 +152,18 @@ type respMessageSend struct {
 	InvalidUsers   string `json:"invaliduser"`
 	InvalidParties string `json:"invalidparty"`
 	InvalidTags    string `json:"invalidtag"`
+	UnlicensedUser string `json:"unlicenseduser"`
+	MsgID          string `json:"msgid"`
+	ResponseCode   string `json:"response_code"`
+}
+
+type SendMessageResp struct {
+	InvalidUsers   string `json:"invaliduser"`    // 不合法的userid，不区分大小写，统一转为小写
+	InvalidParties string `json:"invalidparty"`   // 不合法的partyid
+	InvalidTags    string `json:"invalidtag"`     // 不合法的标签id
+	UnlicensedUser string `json:"unlicenseduser"` // 没有基础接口许可(包含已过期)的userid
+	MsgID          string `json:"msgid"`          // 消息id，用于撤回应用消息
+	ResponseCode   string `json:"response_code"`  // 仅消息类型为“按钮交互型”，“投票选择型”和“多项选择型”的模板卡片消息返回，应用可使用response_code调用更新模版卡片消息接口，72小时内有效，且只能使用一次
 }
 
 type reqUserGet struct {

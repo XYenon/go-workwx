@@ -12,7 +12,7 @@ func (c *WorkwxApp) SendTextMessage(
 	recipient *Recipient,
 	content string,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(recipient, "text", map[string]interface{}{"content": content}, isSafe)
 }
 
@@ -24,7 +24,7 @@ func (c *WorkwxApp) SendImageMessage(
 	recipient *Recipient,
 	mediaID string,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"image",
@@ -42,7 +42,7 @@ func (c *WorkwxApp) SendVoiceMessage(
 	recipient *Recipient,
 	mediaID string,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"voice",
@@ -62,7 +62,7 @@ func (c *WorkwxApp) SendVideoMessage(
 	description string,
 	title string,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"video",
@@ -82,7 +82,7 @@ func (c *WorkwxApp) SendFileMessage(
 	recipient *Recipient,
 	mediaID string,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"file",
@@ -103,7 +103,7 @@ func (c *WorkwxApp) SendTextCardMessage(
 	url string,
 	buttonText string,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"textcard",
@@ -124,7 +124,7 @@ func (c *WorkwxApp) SendNewsMessage(
 	recipient *Recipient,
 	articles []Article,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"news",
@@ -142,7 +142,7 @@ func (c *WorkwxApp) SendMPNewsMessage(
 	recipient *Recipient,
 	mparticles []MPArticle,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"mpnews",
@@ -162,7 +162,7 @@ func (c *WorkwxApp) SendMarkdownMessage(
 	recipient *Recipient,
 	content string,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(recipient, "markdown", map[string]interface{}{"content": content}, isSafe)
 }
 
@@ -175,7 +175,7 @@ func (c *WorkwxApp) SendTaskCardMessage(
 	taskid string,
 	btn []TaskCardBtn,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"taskcard",
@@ -194,7 +194,7 @@ func (c *WorkwxApp) SendTemplateCardMessage(
 	recipient *Recipient,
 	templateCard TemplateCard,
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	return c.sendMessage(
 		recipient,
 		"template_card",
@@ -215,7 +215,7 @@ func (c *WorkwxApp) sendMessage(
 	msgtype string,
 	content map[string]interface{},
 	isSafe bool,
-) error {
+) (*SendMessageResp, error) {
 	sendRequestFunc := c.execMessageSend
 	if !recipient.isValidForMessageSend() {
 		if recipient.isValidForAppchatSend() {
@@ -226,7 +226,7 @@ func (c *WorkwxApp) sendMessage(
 			sendRequestFunc = c.execKfOnEventSend
 		} else {
 			// TODO: better error
-			return errors.New("recipient invalid for message sending")
+			return nil, errors.New("recipient invalid for message sending")
 		}
 	}
 
@@ -244,12 +244,15 @@ func (c *WorkwxApp) sendMessage(
 	}
 
 	resp, err := sendRequestFunc(req)
-
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	// TODO: what to do with resp?
-	_ = resp
-	return nil
+	return &SendMessageResp{
+		InvalidUsers:   resp.InvalidUsers,
+		InvalidParties: resp.InvalidParties,
+		InvalidTags:    resp.InvalidTags,
+		UnlicensedUser: resp.UnlicensedUser,
+		MsgID:          resp.MsgID,
+		ResponseCode:   resp.ResponseCode,
+	}, nil
 }
